@@ -232,14 +232,15 @@ SEXP C_splits1( SEXP x, SEXP numperleaf, SEXP splitleaf, SEXP leafmem,
   int s = length(smpl);
   int numsplits=0;
   int strtind[k];
-  int obsind,covarnum,obsleaf,xnum,leafind,xnumnext,ynum;
+  int obsind,covarnum,leafnum,obsleaf,xnum,leafind,xnumnext,ynum,yind,yindold;
   int nummaxsplit,yold,leaforder;
   int count[k];
+  int strtj = 0;
+  int lmadjust = 1;
   double runningnum, runningden;
   
   int *pnpl, *psl,*plm,*psmpl,*pr,*pcovar,*pleaf,*psortind,*pcli,*pns;
-  
-  double *pctpt,*px,*plossnum,*pkern,*poy;
+  double *pctpt,*px,*plossnum,*plossden,*pkern,*poy ;
   
   pnpl = INTEGER(numperleaf);
   psl = INTEGER(splitleaf);
@@ -259,7 +260,7 @@ SEXP C_splits1( SEXP x, SEXP numperleaf, SEXP splitleaf, SEXP leafmem,
   SEXP vec = PROTECT(allocVector(VECSXP, 5));
   SEXP ns = PROTECT(allocVector(INTSXP, 1));
   SEXP lossnum = PROTECT(allocVector(REALSXP, nummaxsplit));
-  
+  SEXP lossden = PROTECT(allocVector(REALSXP, nummaxsplit));
   
   pcli = INTEGER(covleafind);
   pctpt = REAL(ctpt);
@@ -267,6 +268,7 @@ SEXP C_splits1( SEXP x, SEXP numperleaf, SEXP splitleaf, SEXP leafmem,
   pleaf = INTEGER(leaf);
   pns = INTEGER(ns);
   plossnum = REAL(lossnum);
+  plossden = REAL(lossden);
   
   // Set up counter indices for each leaf
   strtind[0] = 0;
@@ -274,44 +276,64 @@ SEXP C_splits1( SEXP x, SEXP numperleaf, SEXP splitleaf, SEXP leafmem,
     strtind[t] = strtind[t-1] + pnpl[t-1];
   }
   
+  // Check if there are leaves that shouldn't be split
+  if(psl[0] ==0){
+    strtj =1;
+    lmadjust = 0;
+  } 
+  
   // For Each Covariate in the sample
   for ( int i = 0; i < s; i++ ) {
-    covarnum = psmpl[i]-1;
-    
+    covarnum = psmpl[i]-1;    
     for(int d=0; d<k; d++){
       count[d] = 0;
     }
+    for(int check =0; check < n; check++){
+      pcli[check]=check;
+    }
     
     // Sort covariate first by leaf, then in order of value
-    for(int a=0; a<n; a++){
-      // sortind off by one since R starts at 1
-      obsind = psortind[a + n * covarnum] - 1;
-      if(plm[obsind]!=0){
-        obsleaf = plm[obsind] - 1;
-        leaforder = strtind[obsleaf] + count[obsleaf];
-        pcli[leaforder] = obsind;
-        count[obsleaf] += 1;
-      }
+    for( int a=0; a < n; a++){
+      obsind = psortind[ a + n * covarnum ]-1;
+      obsleaf = plm[ obsind] - lmadjust;
+      leaforder = strtind[ obsleaf ] + count[ obsleaf ];
+      pcli[leaforder] = obsind;
+      count[obsleaf]+=1;
     }
-    // covleafind now contains the order of observations,
-    // first sorted by leaf, then by covariate
+    // covleafind now contains the order of observations, first sorted by leaf, then by covariate
     
     // Initialize the leaf counter
-    for( int j = 0; j < k; j++ ){
+    for( int j = strtj; j < k; j++ ){
+      leafnum = psl[j];
       runningnum = 0;
       runningden = 0;
       
+      if( (*pr-1) > 0 ){
+        for(int ci = 0; ci < (*pr-1); ci++){
+          yind = pcli[ strtind[j] + ci ];
+          runningnum += poy[ yind ];
+          if( ci > 0){
+            for( int cii = 0; cii < ci; cii++){
+              yindold = pcli[ strtind[j] + cii ];
+              runningden += 2 * pkern[n * yind + yindold];
+            }
+          }
+          runningden += pkern[n * yind + yind];
+          
+        }
+      }
+      
       // For each observation in the leaf
-      for( int b = 0; b < (pnpl[j] - *pr); b++){
+      for( int b = *pr-1; b < (pnpl[j] - *pr); b++){
         
         // Get index of which observation is next lowest               
         leafind = strtind[j] + b;
         ynum = pcli[ leafind ];
         xnum = n*covarnum + pcli[ leafind ];
+        xnumnext = n*covarnum + pcli[ leafind +1 ];
         
         // Update running numerator and denominator total  
         runningnum += poy[ynum];
-        runningden +=  pkern[n * ynum + ynum];
         
         if(b > 0){
           for( int bi = 0; bi < b; bi++){
@@ -319,16 +341,15 @@ SEXP C_splits1( SEXP x, SEXP numperleaf, SEXP splitleaf, SEXP leafmem,
             runningden += 2 * pkern[n * ynum + yold];
           }
         }
+        runningden +=  pkern[n * ynum + ynum];
         
-        if( b >= pr[0]) {
-          xnumnext = n*covarnum + pcli[ leafind +1 ];
-          if(px[ xnum ] - px[ xnumnext] < 0){
-            pctpt[numsplits] = (px[ xnum ] + px[ xnumnext])/2;
-            pleaf[numsplits] = psl[j];
-            pcovar[numsplits] = covarnum+1;
-            plossnum[numsplits] = runningnum*runningnum/runningden;
-            numsplits += 1;
-          }
+        if(px[ xnum ] - px[ xnumnext] < 0){
+          pctpt[numsplits] = (px[ xnum ] + px[ xnumnext])/2;
+          pleaf[numsplits] = leafnum;
+          pcovar[numsplits] = covarnum+1;
+          plossnum[numsplits] = runningnum*runningnum/runningden;
+          plossden[numsplits] = runningden;
+          numsplits += 1;
         }
         
         // End loop for each observation in the leaf
@@ -346,7 +367,7 @@ SEXP C_splits1( SEXP x, SEXP numperleaf, SEXP splitleaf, SEXP leafmem,
   SET_VECTOR_ELT(vec, 2, leaf);
   SET_VECTOR_ELT(vec, 3, ns);    
   SET_VECTOR_ELT(vec, 4, lossnum);
-  UNPROTECT(7);
+  UNPROTECT(8);
   
   return vec;
 }

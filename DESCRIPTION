@@ -1,0 +1,20 @@
+Package: spatRF
+Title: Random Spatial Forests
+Version: 0.1
+Authors@R: 
+    person(given = "Travis",
+           family = "Hee Wai",
+           role = c("aut", "cre"),
+           email = "theewai@uw.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Implements Random Spatial Forests from Hee Wai et al., 2020
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Imports: 
+    Matrix

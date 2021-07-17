@@ -28,7 +28,7 @@
 #' @param L Penalty matrix encouraging similarity among estimates in different 
 #'          domains.  Applicable only is multiple domains are used.
 #'
-#' @return
+#' @return a list of result with ...
 #' @export
 #' @useDynLib spatRF C_splits
 #' @useDynLib spatRF C_splits1

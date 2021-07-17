@@ -64,7 +64,7 @@ multiple domains are used.}
 domains.  Applicable only is multiple domains are used.}
 }
 \value{
-
+a list of result with ...
 }
 \description{
 spatTree

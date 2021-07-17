@@ -1,10 +1,13 @@
+utils::globalVariables(c("num_ds"))
+
 #' Title
 #'
 #' @param pars 
-#' @param Y 
-#' @param X 
-#' @param domain 
-#' @param coords 
+#' @param Y Observed values
+#' @param X Covariates used to construct the spatially adjusted regression tree
+#' @param domain Used to construct multiple regression trees simultaneously. For
+#'               details, see Hee Wai et al., 2020
+#' @param coords x and y coordinates for locations of the points
 #' @param group 
 #' @param X.fix 
 #' @param cov.type 
@@ -26,7 +29,7 @@
 #' @param scale 
 #' @param ... 
 #'
-#' @return
+#' @return A list of result. With...
 #' @export
 
 spatRF <- function( pars, Y, X, domain, coords, group = 1:length(Y),
@@ -173,9 +176,9 @@ spatRF <- function( pars, Y, X, domain, coords, group = 1:length(Y),
         block_sig[[i]] <- diag(num_ds[i])
       }
     }
-    i.Sig <- as.matrix(bdiag(block_sig))
-    sig.vldt <- as.matrix(bdiag(block_vldt))
-    if(!is.null(X.test)) sig.test <- as.matrix(bdiag(block_test))
+    i.Sig <- as.matrix(Matrix::bdiag(block_sig))
+    sig.vldt <- as.matrix(Matrix::bdiag(block_vldt))
+    if(!is.null(X.test)) sig.test <- as.matrix(Matrix::bdiag(block_test))
     
     ## Run the tree
     mod <- spatTree(Y=Y.train,X=X.train,domain=domain.train,X.fix = X.fix.train,

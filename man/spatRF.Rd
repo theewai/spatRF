@@ -35,13 +35,14 @@ spatRF(
 \arguments{
 \item{pars}{}
 
-\item{Y}{}
+\item{Y}{Observed values}
 
-\item{X}{}
+\item{X}{Covariates used to construct the spatially adjusted regression tree}
 
-\item{domain}{}
+\item{domain}{Used to construct multiple regression trees simultaneously. For
+details, see Hee Wai et al., 2020}
 
-\item{coords}{}
+\item{coords}{x and y coordinates for locations of the points}
 
 \item{group}{}
 
@@ -84,7 +85,7 @@ spatRF(
 \item{...}{}
 }
 \value{
-
+A list of result. With...
 }
 \description{
 Title

@@ -5,7 +5,7 @@
 //void F77_NAME(llc_f)(double *x, int n, double *l, double *a, double *ret);
 
 // Finds x^T A^{- 1} x using DPOTRS to avoid inverse
-
+extern "C"
 void matsmash(double *a, int *n, double *x, double *result,int *index){
     int info;
     int ione = 1;
@@ -26,7 +26,7 @@ void matsmash(double *a, int *n, double *x, double *result,int *index){
     result[*index] = F77_CALL(ddot)(n, x, &ione, savex, &ione);
 }
 
-
+extern "C"
 SEXP C_splits(SEXP x, SEXP numperleaf,SEXP splitleaf , SEXP leafmem, SEXP smpl, SEXP r,SEXP sortind, SEXP kern,SEXP omegaY, SEXP L,SEXP numpergroup, SEXP group){
 int k = length(splitleaf);
 int n = length(leafmem);
@@ -224,7 +224,7 @@ return vec;
 
 }
 
-
+extern "C"
 SEXP C_splits1( SEXP x, SEXP numperleaf, SEXP splitleaf, SEXP leafmem,
                SEXP smpl,SEXP r, SEXP sortind, SEXP kern, SEXP omegaY){
   int k = length(splitleaf);

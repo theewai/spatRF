@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "theewai@uw.edu",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Implements Random Spatial Forests from Hee Wai et al., 2020
+Description: Implements Random Spatial Forests from Hee Wai et al., 2020.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

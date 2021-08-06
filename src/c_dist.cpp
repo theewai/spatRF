@@ -7,6 +7,7 @@
 //  matrix with first set of points
 //  matrix with second set of points
 //  indicator of symmetric matrix.
+extern "C"
 SEXP C_dist(SEXP coord1R, SEXP coord2R, SEXP symmetricR){
 
   //extract input from R
